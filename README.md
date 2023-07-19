@@ -1,9 +1,21 @@
 ### Experiments for one startup
 
-Code for gif image frame changes encoding by rle. Program reads frames from included GIF file (see src/main/resources/source_gif_image.gif) and writes 'different' frames into /output/ dir as 0.gif files.
+Console application is used for gif image frame changes encoding by rle. 
+Program read frames from included GIF file (see src/main/resources/source_gif_image.gif) and writes 'different' frames into /output/ dir as 0.gif, 1.gif... files.
 
 ## JDK 17 is needed
 
+As a quick way you can install [SDKNAM](https://sdkman.io/install) locally first and use it for JDK installation and management later.
+
+### Show available JDK list (after SDKMAN is installed)
+> sdk list java
+
+### Install JDK from list (e.g. 17.0.7-graalce OR  17.0.7-tem)
+> sdk install java 17.0.7-graalce
+
+> sdk install java 17.0.7-tem
+
+Check
 > java --version
 
 `openjdk 17.0.5 2022-10-18`
