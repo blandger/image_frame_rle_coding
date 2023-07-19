@@ -22,24 +22,33 @@ import com.example.demo.utils.ImageBufferUtils;
 
 @Slf4j
 public class DemoApplication {
+	static String[] imageatt = new String[]{
+			"imageLeftPosition",
+			"imageTopPosition",
+			"imageWidth",
+			"imageHeight"
+	};
 
 	public static void main(String[] args) {
 		long start = System.currentTimeMillis();
 		log.debug("DemoApp is starting...");
 
+		// source image preparation
+		ImageReader reader = null;
+		File inputFile = null;
 		try {
-			String[] imageatt = new String[]{
-					"imageLeftPosition",
-					"imageTopPosition",
-					"imageWidth",
-					"imageHeight"
-			};
-
-			// source image preparation
-			ImageReader reader = ImageIO.getImageReadersByFormatName("gif").next();
-			File inputFile = new File("src/main/resources/source_gif_image.gif");
+			reader = ImageIO.getImageReadersByFormatName("gif").next();
+			String sourceGifPathName = "src/main/resources/source_gif_image.gif";
+			inputFile = new File(sourceGifPathName);
 			log.debug("Image path is '{}'", inputFile.getAbsolutePath());
-			ImageInputStream ciis = ImageIO.createImageInputStream(inputFile);
+		} catch (Exception e) {
+			log.error("Source image preparation failed with error, sorry...");
+			e.printStackTrace();
+		}
+
+		try (
+				ImageInputStream ciis = ImageIO.createImageInputStream(inputFile);
+		) {
 			reader.setInput(ciis, false);
 
 			int noi = reader.getNumImages(true);
@@ -118,6 +127,7 @@ public class DemoApplication {
 			long elapsed = end - start;
 			log.debug("DemoApp finished in '{}' msec ('{}' seconds)", elapsed, elapsed / 1000);
 		} catch (IOException e) {
+			log.error("App has failed with error, sorry...");
 			e.printStackTrace();
 		}
 	}
