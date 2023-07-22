@@ -50,4 +50,15 @@ class RleEncDecTest {
 
         log.debug("source length = {}, result length = {}", source.length, expected.length);
     }
+
+    @Test
+    void test_rle_decode_incorrect_source_length() {
+        int[] source = {1};
+        Throwable e = assertThrows(IllegalArgumentException.class, () -> RleEncDec.decodeArray(source));
+        assertEquals("source array must have an odd length, but it has = 1", e.getMessage());
+
+        int[] source2 = {0,1,2,3,4,5,6,7,8};
+        e = assertThrows(IllegalArgumentException.class, () -> RleEncDec.decodeArray(source2));
+        assertEquals("source array must have an odd length, but it has = 9", e.getMessage());
+    }
 }

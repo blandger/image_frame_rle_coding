@@ -1,6 +1,6 @@
 package com.example.demo.utils;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
@@ -8,7 +8,7 @@ public class RleEncDec {
 
     public static List<Integer> encodeArray(int[] source) {
         Objects.requireNonNull(source, "source array is null");
-        List<Integer> result = new ArrayList<>(source.length);
+        List<Integer> result = new LinkedList<>();
         if (source.length == 0) {
             return result;
         }
@@ -29,12 +29,12 @@ public class RleEncDec {
 
     public static List<Integer> decodeArray(int[] source) {
         Objects.requireNonNull(source, "source array is null");
-        List<Integer> result = new ArrayList<>(source.length);
+        List<Integer> result = new LinkedList<>();
         if (source.length == 0) {
             return result;
         }
         if (source.length %2 != 0) {
-            throw new IllegalArgumentException("source array must have odd length");
+            throw new IllegalArgumentException("source array must have an odd length, but it has = " + source.length);
         }
         int count;
         int value;
