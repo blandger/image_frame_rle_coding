@@ -55,6 +55,7 @@ public class DemoApplication {
 			log.debug("Image frame(s) number = [{}]", noi);
 			BufferedImage firstOutBuffer = null;
 			BufferedImage nextOutBuffer = null;
+			BufferedImage differenceBuffer = null;
 
 			/// prepare output path
 			Path outPath = Path.of("output");
@@ -97,10 +98,15 @@ public class DemoApplication {
 									imageAttr.get("imageWidth"), imageAttr.get("imageHeight"), BufferedImage.TYPE_INT_ARGB);
 							nextOutBuffer = new BufferedImage(
 									imageAttr.get("imageWidth"), imageAttr.get("imageHeight"), BufferedImage.TYPE_INT_ARGB);
+							differenceBuffer = new BufferedImage(
+									imageAttr.get("imageWidth"), imageAttr.get("imageHeight"), BufferedImage.TYPE_INT_ARGB);
 							firstOutBuffer.getGraphics().drawImage(
 									image, imageAttr.get("imageLeftPosition"),
 									imageAttr.get("imageTopPosition"), null);
 							nextOutBuffer.getGraphics().drawImage(
+									image, imageAttr.get("imageLeftPosition"),
+									imageAttr.get("imageTopPosition"), null);
+							differenceBuffer.getGraphics().drawImage(
 									image, imageAttr.get("imageLeftPosition"),
 									imageAttr.get("imageTopPosition"), null);
 						} else {
@@ -113,14 +119,17 @@ public class DemoApplication {
 					}
 				}
 				// compare two frames
-				if (ImageBufferUtils.isBufferedImagesEqual(firstOutBuffer, nextOutBuffer) && i != 0) {
+				if (ImageBufferUtils.isBufferedImagesEqual(firstOutBuffer, nextOutBuffer, differenceBuffer) && i != 0) {
 					log.debug("Skipping EQUAL frame(s) at i = {}", i);
 				} else {
 					// next frame has changes
 					// copy content from 'next' to 'first'
 					firstOutBuffer = ImageBufferUtils.deepCopy(nextOutBuffer);
 					// write changed 'first' into separate GIF file
-					ImageBufferUtils.writeFileImageFrame(firstOutBuffer, currentOut, i);
+					ImageBufferUtils.writeFileImageFrame(firstOutBuffer, currentOut, i, "_source");
+					if (i != 0) {
+						ImageBufferUtils.writeFileImageFrame(differenceBuffer, currentOut, i, "_diff");
+					}
 				}
 			}
 			long end = System.currentTimeMillis();

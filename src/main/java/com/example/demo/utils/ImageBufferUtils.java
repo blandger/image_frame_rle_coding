@@ -17,20 +17,33 @@ public class ImageBufferUtils {
     protected ImageBufferUtils() {
     }
 
-    public static boolean isBufferedImagesEqual(BufferedImage img1, BufferedImage img2) {
-        Objects.requireNonNull(img1, "img1 is NULL");
-        Objects.requireNonNull(img2, "img2 is NULL");
-        if (img1.getWidth() == img2.getWidth() && img1.getHeight() == img2.getHeight()) {
-            for (int x = 0; x < img1.getWidth(); x++) {
-                for (int y = 0; y < img1.getHeight(); y++) {
-                    if (img1.getRGB(x, y) != img2.getRGB(x, y))
-                        return false;
+    public static boolean isBufferedImagesEqual(BufferedImage sourceImage,
+                                                BufferedImage comparedImage,
+                                                BufferedImage targetDiffImage) {
+        Objects.requireNonNull(sourceImage, "sourceImage is NULL");
+        Objects.requireNonNull(comparedImage, "comparedImage is NULL");
+        Objects.requireNonNull(comparedImage, "targetDiffImage is NULL");
+        boolean isEquals = true;
+        int changedPixelsNumber = 0;
+        if (sourceImage.getWidth() == comparedImage.getWidth() && sourceImage.getHeight() == comparedImage.getHeight()) {
+            for (int x = 0; x < sourceImage.getWidth(); x++) {
+                for (int y = 0; y < sourceImage.getHeight(); y++) {
+                    if (sourceImage.getRGB(x, y) != comparedImage.getRGB(x, y)) {
+                        isEquals = false;
+                        targetDiffImage.setRGB(x, y, sourceImage.getRGB(x, y) - comparedImage.getRGB(x, y));
+                        changedPixelsNumber++;
+                    } else {
+                        targetDiffImage.setRGB(x, y, 0);
+                    }
                 }
             }
         } else {
             return false;
         }
-        return true;
+        if (!isEquals) {
+            log.debug("Diff has '{}' changed pixels in frame", changedPixelsNumber);
+        }
+        return isEquals;
     }
 
     public static BufferedImage deepCopy(BufferedImage bi) {
@@ -41,10 +54,13 @@ public class ImageBufferUtils {
         return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
     }
 
-    public static void writeFileImageFrame(BufferedImage firstOutBuffer, Path outPath, int i) throws IOException {
+    public static void writeFileImageFrame(
+            BufferedImage firstOutBuffer, Path outPath, int i,
+            String fileNamePrefix) throws IOException {
         Objects.requireNonNull(firstOutBuffer, "firstOutBuffer is NULL");
         Objects.requireNonNull(outPath, "outPath is NULL");
-        File outputFile = new File(i + ".gif");
+        Objects.requireNonNull(outPath, "fileNamePrefix is NULL");
+        File outputFile = new File(i + fileNamePrefix + ".gif");
         Path outFullPath = Path.of(outPath.toString(), outputFile.getName());
         log.debug("File [{}] will be written to = '{}'", i, outFullPath);
         ImageIO.write(firstOutBuffer, "GIF", outFullPath.toFile());
