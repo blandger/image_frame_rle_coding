@@ -5,7 +5,7 @@ Program read frames from included GIF file (see src/main/resources/source_gif_im
 
 ## JDK 17 is needed
 
-As a quick way you can install [SDKNAM](https://sdkman.io/install) locally first and use it for JDK installation and management later.
+As a quick way you can install [SDKMAN](https://sdkman.io/install) locally first and use it for JDK installation and management later.
 
 ### Show available JDK list (after SDKMAN is installed)
 > sdk list java
