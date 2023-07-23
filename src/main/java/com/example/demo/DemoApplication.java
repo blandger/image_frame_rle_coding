@@ -1,5 +1,7 @@
 package com.example.demo;
 
+import com.example.demo.utils.BufferComparisonResult;
+import com.example.demo.utils.RleEncoderDecoder;
 import lombok.extern.slf4j.Slf4j;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
@@ -16,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.example.demo.utils.ImageBufferUtils;
@@ -36,10 +39,11 @@ public class DemoApplication {
 		// source image preparation
 		ImageReader reader = null;
 		File inputFile = null;
+		// hard coded file in resources
+		String sourceGifPathName = "src/main/resources/source_gif_image.gif";
 		try {
-			reader = ImageIO.getImageReadersByFormatName("gif").next();
-			String sourceGifPathName = "src/main/resources/source_gif_image.gif";
 			inputFile = new File(sourceGifPathName);
+			reader = ImageIO.getImageReadersByFormatName("gif").next();
 			log.debug("Image path is '{}'", inputFile.getAbsolutePath());
 		} catch (Exception e) {
 			log.error("Source image preparation failed with error, sorry...");
@@ -52,9 +56,12 @@ public class DemoApplication {
 			reader.setInput(ciis, false);
 
 			int noi = reader.getNumImages(true);
-			log.debug("Image frame(s) number = [{}]", noi);
+			log.debug("GIF Image frame(s) number = [{}]", noi);
+			// buffer to write output gif
 			BufferedImage firstOutBuffer = null;
+			// buffer to compare current and next frame
 			BufferedImage nextOutBuffer = null;
+			// buffer to write difference gif
 			BufferedImage differenceBuffer = null;
 
 			/// prepare output path
@@ -67,17 +74,20 @@ public class DemoApplication {
 				Files.createDirectory(currentOut);
 			}
 
+			RleEncoderDecoder rleEncoderDecoder = new RleEncoderDecoder();
+			// loop over GIF's internal frames
 			for (int i = 0; i < noi; i++) {
 				log.debug("Frame number = {}", i);
 				BufferedImage image = reader.read(i);
 				IIOMetadata metadata = reader.getImageMetadata(i);
 
 				Node tree = metadata.getAsTree("javax_imageio_gif_image_1.0");
-//				Node tree = metadata.getAsTree("javax_imageio_1.0");
-//				Node tree = metadata.getAsTree("javax_imageio_gif_stream_1.0");
+//				Node tree = metadata.getAsTree("javax_imageio_1.0"); // doesn't work for me
+//				Node tree = metadata.getAsTree("javax_imageio_gif_stream_1.0");// doesn't work for me
 				NodeList children = tree.getChildNodes();
 				log.trace("Image descriptor(s) number = {}", children.getLength());
 
+				// loop over frame's descriptors
 				for (int j = 0; j < children.getLength(); j++) {
 					Node nodeItem = children.item(j); // image attribute
 					String nodeName = nodeItem.getNodeName(); // image attribute name
@@ -118,20 +128,46 @@ public class DemoApplication {
 						}
 					}
 				}
+				BufferComparisonResult comparisonResult =
+						ImageBufferUtils.compareAndCalculateBufferedImagesEquality(
+						firstOutBuffer, nextOutBuffer, differenceBuffer);
 				// compare two frames
-				if (ImageBufferUtils.isBufferedImagesEqual(firstOutBuffer, nextOutBuffer, differenceBuffer) && i != 0) {
+				if (comparisonResult.isEqual() && i != 0) {
 					log.debug("Skipping EQUAL frame(s) at i = {}", i);
 				} else {
-					// next frame has changes
-					// copy content from 'next' to 'first'
-					firstOutBuffer = ImageBufferUtils.deepCopy(nextOutBuffer);
 					// write changed 'first' into separate GIF file
 					ImageBufferUtils.writeFileImageFrame(firstOutBuffer, currentOut, i, "_source");
 					if (i != 0) {
+						// write 'difference' data as GIF file
 						ImageBufferUtils.writeFileImageFrame(differenceBuffer, currentOut, i, "_diff");
+
+						// compute RLE diff using int array
+						Integer[] outputArray = comparisonResult.outputDifferenceResultArray();
+						List<Integer> encodedData = rleEncoderDecoder.encodeArray(outputArray);
+
+						// HERE was pass encodedData from Android App to Watches client...
+
+						// decode RLE data on Android client
+						List<Integer> decodedAgainData = rleEncoderDecoder.decodeArray(encodedData.toArray(Integer[]::new));
+
+						// that is the NEW image composed of previous frame + RLE data applied to it
+						BufferedImage alteredImage = ImageBufferUtils
+								.applyRleDiffToBufferedImage(firstOutBuffer, decodedAgainData);
+						ImageBufferUtils.writeFileImageFrame(alteredImage, currentOut, i, "_rle_composed");
+
+						// check if images are equals (rle composed and next source original)
+						if (ImageBufferUtils.isBufferedImageEqual(nextOutBuffer, alteredImage)) {
+							String error = "WOW, something WORKS WRONG! Images MUST BE EQUAL at frame #" + i;
+							log.error(error);
+							throw new RuntimeException(error);
+						}
 					}
+					// next frame has changes
+					// copy content from 'next' to 'first'
+					firstOutBuffer = ImageBufferUtils.deepCopy(nextOutBuffer);
 				}
 			}
+
 			long end = System.currentTimeMillis();
 			long elapsed = end - start;
 			log.debug("DemoApp finished in '{}' msec ('{}' seconds)", elapsed, elapsed / 1000);
