@@ -28,11 +28,11 @@ class RleEncoderDecoderTest {
 
     @Test
     void test_rle_encoding() {
-        Integer[] source = {0,0,0,0,1,2,3,4,4,4,5,0,0,0,2,3,3,2,2,1};
+        Integer[] source = {0,0,0,0,1,2,3,4,4,4,5,0,0,0,2,3,3,2,2,1}; // initial
 
         List<Integer> result = rleEncoderDecoder.encodeArray(source);
 
-        Integer[] expected = {4,0,1,1,1,2,1,3,3,4,1,5,3,0,1,2,2,3,2,2,1,1};
+        Integer[] expected = {4,0,1,1,1,2,1,3,3,4,1,5,3,0,1,2,2,3,2,2,1,1}; // rle count + value pairs
         assertArrayEquals(expected, result.toArray(Integer[]::new));
 
         log.debug("source length = {}, result length = {}", source.length, expected.length);
@@ -44,7 +44,7 @@ class RleEncoderDecoderTest {
 
         List<Integer> result = rleEncoderDecoder.encodeArray(source);
 
-        Integer[] expected = {2,0};
+        Integer[] expected = {2,0}; // rle count + value pair
         assertArrayEquals(expected, result.toArray(Integer[]::new));
 
         log.debug("source length = {}, result length = {}", source.length, expected.length);
@@ -60,12 +60,12 @@ class RleEncoderDecoderTest {
 
     @Test
     void test_rle_decoding() {
-        Integer[] source = {4,0,1,1,1,2,1,3,3,4,1,5,3,0,1,2,2,3,2,2,1,1};
+        Integer[] source = {4,0,1,1,1,2,1,3,3,4,1,5,3,0,1,2,2,3,2,2,1,1}; // rle count + value pairs
 
         List<Integer> result = rleEncoderDecoder.decodeArray(source);
         log.debug("result = {}", result);
 
-        Integer[] expected = {0,0,0,0,1,2,3,4,4,4,5,0,0,0,2,3,3,2,2,1};
+        Integer[] expected = {0,0,0,0,1,2,3,4,4,4,5,0,0,0,2,3,3,2,2,1}; // initial
         assertArrayEquals(expected, result.toArray(Integer[]::new));
 
         log.debug("source length = {}, result length = {}", source.length, expected.length);
@@ -73,12 +73,12 @@ class RleEncoderDecoderTest {
 
     @Test
     void test_rle_decoding_tiny() {
-        Integer[] source = {2,0};
+        Integer[] source = {2,0}; // rle count + value pairs
 
         List<Integer> result = rleEncoderDecoder.decodeArray(source);
         log.debug("result = {}", result);
 
-        Integer[] expected = {0,0};
+        Integer[] expected = {0,0}; // initial
         assertArrayEquals(expected, result.toArray(Integer[]::new));
 
         log.debug("source length = {}, result length = {}", source.length, expected.length);
